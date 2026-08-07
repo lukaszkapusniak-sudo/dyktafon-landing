@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Dyktafon — live transkrypcja spotkań z AI</title>
+<meta name="description" content="Nagrywaj spotkania, dostawaj live transkrypcję z rozpoznaniem osób, komentarz agenta AI i sugerowane akcje w Google Suite." />
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #14141a;
+    --surface-2: #1c1c24;
+    --surface-3: #262631;
+    --border: #26262f;
+    --border-strong: #363642;
+    --text: #eaeaf0;
+    --text-muted: #7a7a85;
+    --text-dim: #565660;
+    --danger: #ef4444;
+    --success: #4ecca3;
+    --warning: #f0a500;
+    --info: #3ba7ff;
+    --accent: #ff5e5b;
+
+    --sp-0: #4ecca3; --sp-1: #f0a500; --sp-2: #ff5e5b; --sp-3: #7dd3a6;
+    --sp-4: #a385ff; --sp-5: #f97316; --sp-6: #3ba7ff; --sp-7: #e94ecc;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+
+  /* Hero */
+  .hero {
+    padding: 100px 0 80px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background:
+      radial-gradient(ellipse at top, rgba(239, 68, 68, 0.08), transparent 55%),
+      radial-gradient(ellipse at bottom left, rgba(163, 133, 255, 0.05), transparent 45%);
+  }
+  .hero .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    font-family: var(--font-mono);
+  }
+  .hero .badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--danger);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .4 } }
+
+  .hero h1 {
+    font-size: clamp(40px, 8vw, 68px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    margin-bottom: 20px;
+  }
+  .hero h1 .accent {
+    background: linear-gradient(135deg, var(--danger), var(--sp-4) 70%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hero p.lede {
+    font-size: 18px;
+    color: var(--text-muted);
+    max-width: 640px;
+    margin: 0 auto 36px;
+    line-height: 1.55;
+  }
+  .hero .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 26px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 500;
+    transition: filter .15s;
+    box-shadow: 0 8px 28px rgba(239,68,68,0.25);
+  }
+  .hero .cta:hover { filter: brightness(1.1); }
+  .hero .cta::before {
+    content: '';
+    width: 8px; height: 8px; border-radius: 50%; background: #fff;
+  }
+  .hero .sub {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  /* Section base */
+  section.block { padding: 80px 0; border-bottom: 1px solid var(--border); }
+  section.block:last-child { border-bottom: none; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .section-head .num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+  .section-head h2 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Feature grid — 3 kolumny na desktop */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .card {
+    padding: 24px 22px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    transition: background .15s;
+  }
+  .card:hover { background: var(--surface-2); }
+
+  .card .idx {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card .idx .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+  }
+  .card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .card ul {
+    list-style: none;
+    padding: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: auto;
+  }
+  .card ul li {
+    padding: 3px 0 3px 12px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .card ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 4px;
+    height: 1px;
+    background: var(--text-dim);
+  }
+
+  /* Persona list */
+  .persona-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .persona-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .persona-list li .swatch {
+    width: 6px; height: 6px; border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .persona-list li strong {
+    color: var(--text);
+    font-weight: 600;
+    margin-right: 4px;
+  }
+
+  /* Stack chips */
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    padding: 5px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .chip strong { color: var(--text); font-weight: 500; }
+
+  /* Footer */
+  footer {
+    padding: 44px 0 60px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+  footer a { color: var(--text-muted); border-bottom: 1px dotted var(--border-strong); }
+  footer a:hover { color: var(--text); }
+  footer .row { margin-top: 8px; }
+
+  /* Waveform */
+  .waveform {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    margin: 36px auto 0;
+    opacity: 0.5;
+  }
+  .waveform span {
+    width: 3px;
+    background: var(--text-muted);
+    border-radius: 2px;
+    animation: wave 1.6s ease-in-out infinite;
+  }
+  .waveform span:nth-child(1) { height: 12px; animation-delay: 0s; }
+  .waveform span:nth-child(2) { height: 26px; animation-delay: .1s; }
+  .waveform span:nth-child(3) { height: 34px; animation-delay: .2s; }
+  .waveform span:nth-child(4) { height: 20px; animation-delay: .3s; }
+  .waveform span:nth-child(5) { height: 28px; animation-delay: .4s; }
+  .waveform span:nth-child(6) { height: 14px; animation-delay: .5s; }
+  .waveform span:nth-child(7) { height: 22px; animation-delay: .6s; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.4); }
+    50% { transform: scaleY(1); }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="container">
+    <span class="badge"><span class="dot"></span> WAVE 0 · BETA · INVITE-ONLY</span>
+    <h1><span class="accent">Dyktafon</span><br />live transkrypcja spotkań z AI</h1>
+    <p class="lede">
+      Nagrywaj rozmowy w przeglądarce. Dostajesz transkrypcję na żywo z rozpoznaniem osób,
+      komentarz inteligentnego agenta i gotowe akcje w Google Suite.
+    </p>
+    <a href="https://dyktafon.vercel.app" class="cta">Otwórz aplikację</a>
+    <div class="sub">dyktafon.vercel.app · Safari, Chrome · Mac, iPhone</div>
+    <div class="waveform">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">01</span>
+      <h2>Transkrypcja</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-0)"></span>01.01</div>
+        <h3>Live streaming</h3>
+        <p>Speechmatics real-time. Partial i final chunki z merge policy — pełne zdania zamiast urywków.</p>
+        <ul>
+          <li>PL / EN (per sesja)</li>
+          <li>Konfigurowalny max_delay 1–10s</li>
+          <li>Enhanced / Standard operating point</li>
+          <li>Zmiana parametrów w locie (auto-restart WS)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-1)"></span>01.02</div>
+        <h3>Rozpoznawanie osób</h3>
+        <p>Automatyczna diarization do 10 mówiących. Speaker embeddings, kolor per osoba.</p>
+        <ul>
+          <li>Inline aliasy — klik i wpisz imię</li>
+          <li>Retroaktywne przemianowanie wszystkich bąbli</li>
+          <li>Statystyki: słowa · czas · % wkładu</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-2)"></span>01.03</div>
+        <h3>Edycja w locie</h3>
+        <p>Dwie strefy: live (ostatnie 3, read-only, auto-scroll) i settled (edytowalne).</p>
+        <ul>
+          <li>Klik na chunk → textarea, Cmd+Enter zapisuje</li>
+          <li>Sticky-bottom scroll — nie pauzuje live</li>
+          <li>IndexedDB backup audio lokalnie</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">02</span>
+      <h2>Agent AI</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-6)"></span>02.01</div>
+        <h3>Komentarze live</h3>
+        <p>Claude Sonnet 4.6 albo Haiku 4.5. Automatyczne co 30s + button on-demand.</p>
+        <ul>
+          <li>Dymki anchored do konkretnego fragmentu</li>
+          <li>Toggle on/off, przełącznik modelu w locie</li>
+          <li>Licznik tokenów + koszt per komentarz</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-4)"></span>02.02</div>
+        <h3>6 osobowości</h3>
+        <p>Wybierz kto komentuje twoją rozmowę. Każda persona z osobnym system promptem.</p>
+        <ul class="persona-list">
+          <li>
+            <span class="swatch" style="background:var(--sp-4)"></span>
+            <span><strong>Hermiona</strong> — hard truth. Nazywa drift wprost, pyta „co dokładnie ustaliliście?" gdy rozmowa płynie ale nic nie zapadło.</span>
+          </li>
+          <li>
+            <span class="swatch" style="background:var(--sp-0)"></span>
+            <span><strong>Mira</strong> — principal engineer. Ukryte założenia, tradeoffy, „kto jest source of truth?", „co przy failure?".</span>
+          </li>
+          <li>
+            <span class="swatch" style="background:var(--sp-1)"></span>
+            <span><strong>Eleanor</strong> — UX/UI. Zawsze pyta „dla kogo i kiedy". Reaguje gdy dyskusja pomija odbiorcę.</span>
+          </li>
+          <li>
+            <span class="swatch" style="background:var(--sp-2)"></span>
+            <span><strong>George</strong> — neurotyk (Costanza). Opposite logic, wyciąga rzecz o której wszyscy myśleli ale nikt nie chciał powiedzieć.</span>
+          </li>
+          <li>
+            <span class="swatch" style="background:var(--sp-6)"></span>
+            <span><strong>Harvey</strong> — closer (Specter). „Co jest teraz do zamknięcia?", „jaka cena tej decyzji?", „kto ma leverage?".</span>
+          </li>
+          <li>
+            <span class="swatch" style="background:var(--text-muted)"></span>
+            <span><strong>Neutralny</strong> — rzeczowy, bez charakteru. Kluczowe punkty, otwarte pytania, bez oceny.</span>
+          </li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-3)"></span>02.03</div>
+        <h3>Fact-check z web</h3>
+        <p>Sonnet + web_search weryfikuje twierdzenia (daty, cytaty, wydarzenia historyczne).</p>
+        <ul>
+          <li>Per komentarz — button „Sprawdź"</li>
+          <li>Per claim w summary — re-check on demand</li>
+          <li>Werdykt: Potwierdzone / Obalone / Niepewne + źródła</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">03</span>
+      <h2>Po Stop</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-5)"></span>03.01</div>
+        <h3>Auto-podsumowanie</h3>
+        <p>Sonnet analizuje transkrypt + statystyki i generuje pełne omówienie sesji.</p>
+        <ul>
+          <li>Tytuł (3–8 słów, opisujący temat)</li>
+          <li>Streszczenie 2–4 zdania</li>
+          <li>Tagi tematyczne 3–8</li>
+          <li>Progress bars per uczestnik</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-6)"></span>03.02</div>
+        <h3>Sugerowane akcje</h3>
+        <p>Agent wykrywa akcje w rozmowie i podpisuje deep linki do Google Suite.</p>
+        <ul>
+          <li>Kalendarz — event prefill (data, duration, details)</li>
+          <li>Gmail — draft maila (adresat, subject, body)</li>
+          <li>Docs — content w schowku, nowy dokument</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-7)"></span>03.03</div>
+        <h3>Fact-check report</h3>
+        <p>Do 5 kluczowych twierdzeń z rozmowy zweryfikowane w web.</p>
+        <ul>
+          <li>Color-coded werdykt (zielony / czerwony / pomarańczowy)</li>
+          <li>Uzasadnienie + linki do źródeł</li>
+          <li>Re-check button per claim</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">04</span>
+      <h2>Bezpieczeństwo i dostęp</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--warning)"></span>04.01</div>
+        <h3>Invite-only</h3>
+        <p>Nowe konta tylko po dodaniu do allowlisty. Postgres trigger na auth.users blokuje signup spoza listy.</p>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--info)"></span>04.02</div>
+        <h3>Magic link</h3>
+        <p>Bez haseł. Zaproszony klika link w mailu, ląduje w apce już zalogowany. Custom SMTP opcjonalnie.</p>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--success)"></span>04.03</div>
+        <h3>Row-level security</h3>
+        <p>Każda tabela w Supabase z RLS. User widzi tylko swoje sesje, chunki, aliasy, komentarze agenta.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">05</span>
+      <h2>Stack</h2>
+    </div>
+    <div class="stack">
+      <span class="chip"><strong>Next.js 16</strong> · React 19</span>
+      <span class="chip"><strong>Tailwind CSS v4</strong></span>
+      <span class="chip"><strong>Supabase</strong> · Postgres · Auth · RLS</span>
+      <span class="chip"><strong>Speechmatics</strong> · real-time WebSocket STT</span>
+      <span class="chip"><strong>Anthropic</strong> · Sonnet 4.6 · Haiku 4.5</span>
+      <span class="chip"><strong>web_search tool</strong> · fact-check</span>
+      <span class="chip">Web Audio API · AudioWorklet · IndexedDB</span>
+      <span class="chip"><strong>Vercel</strong> · deployment</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>WAVE 0 · <a href="https://dyktafon.vercel.app">dyktafon.vercel.app</a></p>
+    <p class="row">Autor: <a href="mailto:lukasz.kapusniak@cloudtechnologies.pl">kapoost</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
