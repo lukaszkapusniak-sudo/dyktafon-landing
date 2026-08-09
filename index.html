@@ -295,14 +295,14 @@
 
 <section class="hero">
   <div class="container">
-    <span class="badge"><span class="dot"></span> WAVE 0 · BETA · INVITE-ONLY</span>
+    <span class="badge"><span class="dot"></span> WAVE 3 · BETA · INVITE-ONLY</span>
     <h1><span class="accent">Dyktafon</span><br />live transkrypcja spotkań z AI</h1>
     <p class="lede">
       Nagrywaj rozmowy w przeglądarce. Dostajesz transkrypcję na żywo z rozpoznaniem osób,
-      komentarz inteligentnego agenta i gotowe akcje w Google Suite.
+      komentarz agenta z fact-checkiem, sync między urządzeniami i gotowe akcje w Google Suite.
     </p>
     <a href="https://dyktafon.vercel.app" class="cta">Otwórz aplikację</a>
-    <div class="sub">dyktafon.vercel.app · Safari, Chrome · Mac, iPhone</div>
+    <div class="sub">dyktafon.vercel.app · PWA · Safari, Chrome · Mac, iPhone, Android</div>
     <div class="waveform">
       <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
@@ -459,23 +459,38 @@
   <div class="container">
     <div class="section-head">
       <span class="num">04</span>
-      <h2>Bezpieczeństwo i dostęp</h2>
+      <h2>Nawigacja i archiwum</h2>
     </div>
     <div class="grid">
       <div class="card">
-        <div class="idx"><span class="dot" style="background:var(--warning)"></span>04.01</div>
-        <h3>Invite-only</h3>
-        <p>Nowe konta tylko po dodaniu do allowlisty. Postgres trigger na auth.users blokuje signup spoza listy.</p>
+        <div class="idx"><span class="dot" style="background:var(--sp-6)"></span>04.01</div>
+        <h3>Full-text search</h3>
+        <p>Postgres FTS z GIN indexem po transkrypcie, tytułach i tagach. Debounce 300ms, wyniki z bold-highlighted snippet.</p>
+        <ul>
+          <li>Accent-insensitive (wnętrze = wnetrze)</li>
+          <li>Składnia websearch: cudzysłowy, OR, -exclude</li>
+          <li>Badge „transkrypt" vs „meta"</li>
+        </ul>
       </div>
       <div class="card">
-        <div class="idx"><span class="dot" style="background:var(--info)"></span>04.02</div>
-        <h3>Magic link</h3>
-        <p>Bez haseł. Zaproszony klika link w mailu, ląduje w apce już zalogowany. Custom SMTP opcjonalnie.</p>
+        <div class="idx"><span class="dot" style="background:var(--sp-3)"></span>04.02</div>
+        <h3>Public share</h3>
+        <p>Read-only link do sesji dla osób bez konta. Token-based, SECURITY DEFINER function bypassuje RLS w kontrolowany sposób.</p>
+        <ul>
+          <li>Toggle w detail view — link do skopiowania</li>
+          <li>Bez autoryzacji, ale nie do zindeksowania</li>
+          <li>Revoke jednym kliknięciem</li>
+        </ul>
       </div>
       <div class="card">
-        <div class="idx"><span class="dot" style="background:var(--success)"></span>04.03</div>
-        <h3>Row-level security</h3>
-        <p>Każda tabela w Supabase z RLS. User widzi tylko swoje sesje, chunki, aliasy, komentarze agenta.</p>
+        <div class="idx"><span class="dot" style="background:var(--sp-1)"></span>04.03</div>
+        <h3>Export</h3>
+        <p>Pełne dane sesji do lokalnego pliku — Markdown do czytania, JSON do dalszego przetwarzania.</p>
+        <ul>
+          <li>Transkrypt z osobami + summary</li>
+          <li>Fact-check report z werdyktami i źródłami</li>
+          <li>Suggested actions + metadata</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -485,16 +500,101 @@
   <div class="container">
     <div class="section-head">
       <span class="num">05</span>
+      <h2>Wiele urządzeń, jedno spotkanie</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--info)"></span>05.01</div>
+        <h3>Shadow view</h3>
+        <p>Otwórz tę samą sesję na drugim urządzeniu — dostajesz live shadow z transkrypcją bez podwójnego nagrywania.</p>
+        <ul>
+          <li>Supabase Realtime (postgres_changes)</li>
+          <li>Chunki, agent bubbles, speakerzy — auto-update</li>
+          <li>Wymuś zakończenie jak tamto urządzenie padło</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-4)"></span>05.02</div>
+        <h3>WS reconnect</h3>
+        <p>Speechmatics WebSocket sam się podnosi po zerwaniu. PCM buforowany lokalnie, wysyłany po reconnect.</p>
+        <ul>
+          <li>Exponential backoff (1s / 3s / 9s)</li>
+          <li>Bufor do 60s audio</li>
+          <li>Wake Lock — ekran nie gaśnie w trakcie</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--sp-0)"></span>05.03</div>
+        <h3>Anti-halucynacje</h3>
+        <p>AudioWorklet z RMS + ZCR gate przed wysłaniem chunku. Filtruje ciszę, szum, sygnał nie-mowy.</p>
+        <ul>
+          <li>Progi konfigurowalne w Settings</li>
+          <li>Zero „you" i „thank you" z pustki</li>
+          <li>Force-stop dla zombie sesji z listy</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">06</span>
+      <h2>Bezpieczeństwo i dostęp</h2>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--warning)"></span>06.01</div>
+        <h3>Invite-only + tokeny</h3>
+        <p>Nowe konta tylko z zaproszenia. Postgres trigger na auth.users blokuje signup spoza allowlisty. Admin generuje jednorazowe tokeny.</p>
+        <ul>
+          <li>SECURITY DEFINER redeem_invite_token</li>
+          <li>Panel admina do zarządzania listą</li>
+          <li>Token wygasa po użyciu</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--info)"></span>06.02</div>
+        <h3>Email + hasło</h3>
+        <p>Klasyczny auth Supabase — działa identycznie w Safari, PWA i innych przeglądarkach. Reset przez link mailowy.</p>
+        <ul>
+          <li>signInWithPassword — bez maili co logowanie</li>
+          <li>Sesja perzystuje między urządzeniami</li>
+          <li>updateUser({password}) do zmiany hasła</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="idx"><span class="dot" style="background:var(--success)"></span>06.03</div>
+        <h3>RLS + accounting</h3>
+        <p>Każda tabela z Row-Level Security. Panel admina z tabelą kosztów LLM per user, per model.</p>
+        <ul>
+          <li>llm_calls z automatyczną kalkulacją $</li>
+          <li>User widzi tylko swoje dane</li>
+          <li>Retry logic dla 5xx/429 od Anthropic</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="container">
+    <div class="section-head">
+      <span class="num">07</span>
       <h2>Stack</h2>
     </div>
     <div class="stack">
-      <span class="chip"><strong>Next.js 16</strong> · React 19</span>
+      <span class="chip"><strong>Next.js 16</strong> · React 19 · Turbopack</span>
       <span class="chip"><strong>Tailwind CSS v4</strong></span>
-      <span class="chip"><strong>Supabase</strong> · Postgres · Auth · RLS</span>
+      <span class="chip"><strong>Supabase</strong> · Postgres · Auth · Realtime · RLS</span>
       <span class="chip"><strong>Speechmatics</strong> · real-time WebSocket STT</span>
       <span class="chip"><strong>Anthropic</strong> · Sonnet 4.6 · Haiku 4.5</span>
       <span class="chip"><strong>web_search tool</strong> · fact-check</span>
-      <span class="chip">Web Audio API · AudioWorklet · IndexedDB</span>
+      <span class="chip"><strong>Postgres FTS</strong> · unaccent · GIN</span>
+      <span class="chip">Web Audio API · AudioWorklet · Wake Lock</span>
+      <span class="chip">IndexedDB · audio backup lokalnie</span>
+      <span class="chip"><strong>PWA</strong> · manifest · service worker</span>
       <span class="chip"><strong>Vercel</strong> · deployment</span>
     </div>
   </div>
@@ -502,7 +602,7 @@
 
 <footer>
   <div class="container">
-    <p>WAVE 0 · <a href="https://dyktafon.vercel.app">dyktafon.vercel.app</a></p>
+    <p>WAVE 3 · <a href="https://dyktafon.vercel.app">dyktafon.vercel.app</a></p>
     <p class="row">Autor: <a href="mailto:lukasz.kapusniak@cloudtechnologies.pl">kapoost</a></p>
   </div>
 </footer>
